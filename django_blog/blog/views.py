@@ -97,17 +97,17 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         # Get the post and set author automatically
-        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        post = get_object_or_404(Post, pk=self.kwargs['pk'])
         form.instance.post = post
         form.instance.author = self.request.user
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('post-detail', kwargs={'pk': self.kwargs['post_id']})
+        return reverse('post-detail', kwargs={'pk': self.kwargs['pk']})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['post'] = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        context['post'] = get_object_or_404(Post, pk=self.kwargs['pk'])
         return context
 
 # Update a comment - class-based view
