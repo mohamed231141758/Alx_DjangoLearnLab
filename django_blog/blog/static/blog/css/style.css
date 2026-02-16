@@ -112,3 +112,10 @@ footer {
 .comment-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
 .add-comment { margin-top: 2rem; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; }
 .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
+
+/* Tags and Search styles */
+.tag { display: inline-block; background: #eee; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; text-decoration: none; color: #333; margin: 0.2rem; }
+.tag:hover { background: #333; color: #fff; }
+.tags { margin: 0.5rem 0; }
+.search-form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.search-input { flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }

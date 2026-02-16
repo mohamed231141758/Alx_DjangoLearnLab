@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Post, Comment
 
-# Extended registration form with email field
+# Extended registration form
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
 
@@ -26,14 +26,17 @@ class UserUpdateForm(forms.ModelForm):
         model = User
         fields = ['username', 'email']
 
-# Post form
+# Post form with tags
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title', 'content']
+        fields = ['title', 'content', 'tags']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
+        }
+        help_texts = {
+            'tags': 'Enter tags separated by commas.',
         }
 
 # Comment form
@@ -48,6 +51,4 @@ class CommentForm(forms.ModelForm):
                 'placeholder': 'Write your comment here...'
             }),
         }
-        labels = {
-            'content': 'Comment'
-        }
+        labels = {'content': 'Comment'}

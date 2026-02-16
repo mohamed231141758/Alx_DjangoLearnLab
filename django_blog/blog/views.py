@@ -5,6 +5,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
+from django.db.models import Q
+from taggit.models import Tag
 from .forms import CustomUserCreationForm, UserUpdateForm, PostForm, CommentForm
 from .models import Post, Comment
 
@@ -28,7 +30,7 @@ def profile(request):
         form = UserUpdateForm(request.POST, instance=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Profile updated successfully!')
+            messages.success(request, 'Profile updated!')
             return redirect('profile')
     else:
         form = UserUpdateForm(instance=request.user)
@@ -87,16 +89,41 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         post = self.get_object()
         return self.request.user == post.author
 
+# ==================== SEARCH VIEW ====================
+
+def search_posts(request):
+    query = request.GET.get('q', '')
+    results = []
+    if query:
+        # Search by title, content, or tags using Q objects
+        results = Post.objects.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(tags__name__icontains=query)
+        ).distinct()
+    return render(request, 'blog/search_results.html', {
+        'results': results,
+        'query': query
+    })
+
+# ==================== TAG VIEW ====================
+
+def posts_by_tag(request, tag_name):
+    tag = get_object_or_404(Tag, name=tag_name)
+    posts = Post.objects.filter(tags__name__in=[tag_name])
+    return render(request, 'blog/posts_by_tag.html', {
+        'tag': tag,
+        'posts': posts
+    })
+
 # ==================== COMMENT VIEWS ====================
 
-# Create a comment - class-based view
 class CommentCreateView(LoginRequiredMixin, CreateView):
     model = Comment
     form_class = CommentForm
     template_name = 'blog/add_comment.html'
 
     def form_valid(self, form):
-        # Get the post and set author automatically
         post = get_object_or_404(Post, pk=self.kwargs['pk'])
         form.instance.post = post
         form.instance.author = self.request.user
@@ -110,7 +137,6 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         context['post'] = get_object_or_404(Post, pk=self.kwargs['pk'])
         return context
 
-# Update a comment - class-based view
 class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Comment
     form_class = CommentForm
@@ -120,12 +146,10 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def get_success_url(self):
         return reverse('post-detail', kwargs={'pk': self.object.post.pk})
 
-    # Only the comment author can edit
     def test_func(self):
         comment = self.get_object()
         return self.request.user == comment.author
 
-# Delete a comment - class-based view
 class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Comment
     template_name = 'blog/delete_comment.html'
@@ -134,7 +158,6 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def get_success_url(self):
         return reverse('post-detail', kwargs={'pk': self.object.post.pk})
 
-    # Only the comment author can delete
     def test_func(self):
         comment = self.get_object()
         return self.request.user == comment.author
