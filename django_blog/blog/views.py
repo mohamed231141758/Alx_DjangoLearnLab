@@ -47,7 +47,6 @@ class PostDetailView(DetailView):
     template_name = 'blog/post_detail.html'
     context_object_name = 'post'
 
-    # Add comment form and comments to context
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['comments'] = self.object.comments.all()
@@ -90,47 +89,52 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 # ==================== COMMENT VIEWS ====================
 
-# Add a comment to a post
-@login_required
-def add_comment(request, post_id):
-    post = get_object_or_404(Post, pk=post_id)
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.post = post
-            comment.author = request.user
-            comment.save()
-            messages.success(request, 'Comment added!')
-    return redirect('post-detail', pk=post_id)
+# Create a comment - class-based view
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/add_comment.html'
 
-# Edit a comment
-@login_required
-def edit_comment(request, comment_id):
-    comment = get_object_or_404(Comment, pk=comment_id)
-    # Only the author can edit their comment
-    if request.user != comment.author:
-        messages.error(request, 'You cannot edit this comment!')
-        return redirect('post-detail', pk=comment.post.pk)
-    if request.method == 'POST':
-        form = CommentForm(request.POST, instance=comment)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Comment updated!')
-            return redirect('post-detail', pk=comment.post.pk)
-    else:
-        form = CommentForm(instance=comment)
-    return render(request, 'blog/edit_comment.html', {'form': form, 'comment': comment})
+    def form_valid(self, form):
+        # Get the post and set author automatically
+        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        form.instance.post = post
+        form.instance.author = self.request.user
+        return super().form_valid(form)
 
-# Delete a comment
-@login_required
-def delete_comment(request, comment_id):
-    comment = get_object_or_404(Comment, pk=comment_id)
-    # Only the author can delete their comment
-    if request.user != comment.author:
-        messages.error(request, 'You cannot delete this comment!')
-        return redirect('post-detail', pk=comment.post.pk)
-    post_id = comment.post.pk
-    comment.delete()
-    messages.success(request, 'Comment deleted!')
-    return redirect('post-detail', pk=post_id)
+    def get_success_url(self):
+        return reverse('post-detail', kwargs={'pk': self.kwargs['post_id']})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['post'] = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        return context
+
+# Update a comment - class-based view
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/edit_comment.html'
+    context_object_name = 'comment'
+
+    def get_success_url(self):
+        return reverse('post-detail', kwargs={'pk': self.object.post.pk})
+
+    # Only the comment author can edit
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author
+
+# Delete a comment - class-based view
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Comment
+    template_name = 'blog/delete_comment.html'
+    context_object_name = 'comment'
+
+    def get_success_url(self):
+        return reverse('post-detail', kwargs={'pk': self.object.post.pk})
+
+    # Only the comment author can delete
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author
