@@ -129,3 +129,17 @@ STATICFILES_DIRS = []
 
 # Templates are in each app's templates directory
 # This is already handled by APP_DIRS = True in TEMPLATES
+
+# Database configuration
+# Currently using SQLite for development
+# To use PostgreSQL, update the settings below:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
