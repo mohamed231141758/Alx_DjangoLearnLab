@@ -3,14 +3,9 @@ from django.contrib.auth.models import User
 
 # Post model - represents a blog post
 class Post(models.Model):
-    # Title of the blog post
     title = models.CharField(max_length=200)
-    # Main content of the blog post
     content = models.TextField()
-    # Date and time when the post was published (set automatically)
     published_date = models.DateTimeField(auto_now_add=True)
-    # Author of the post - linked to Django's built-in User model
-    # One author can have many posts
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
 
     def __str__(self):
@@ -18,3 +13,22 @@ class Post(models.Model):
 
     class Meta:
         ordering = ['-published_date']
+
+# Comment model - represents a comment on a blog post
+class Comment(models.Model):
+    # Link to the post this comment belongs to
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    # Link to the user who wrote the comment
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    # The comment text
+    content = models.TextField()
+    # When the comment was created
+    created_at = models.DateTimeField(auto_now_add=True)
+    # When the comment was last updated
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Comment by {self.author.username} on {self.post.title}'
+
+    class Meta:
+        ordering = ['created_at']
