@@ -1,0 +1,12 @@
+{% extends 'blog/base.html' %}
+{% block content %}
+<div class="auth-container">
+    <h2>{% if form.instance.pk %}Edit Post{% else %}New Post{% endif %}</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% if form.instance.pk %}Update{% else %}Publish{% endif %}</button>
+    </form>
+    <a href="{% url 'post-list' %}">Cancel</a>
+</div>
+{% endblock %}
