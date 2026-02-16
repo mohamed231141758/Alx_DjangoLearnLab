@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from taggit.forms import TagWidget
 from .models import Post, Comment
 
 # Extended registration form
@@ -26,7 +27,7 @@ class UserUpdateForm(forms.ModelForm):
         model = User
         fields = ['username', 'email']
 
-# Post form with tags
+# Post form with TagWidget for tags
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
@@ -34,6 +35,7 @@ class PostForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
+            'tags': TagWidget(),
         }
         help_texts = {
             'tags': 'Enter tags separated by commas.',
