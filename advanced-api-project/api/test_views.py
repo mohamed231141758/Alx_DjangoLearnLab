@@ -158,3 +158,12 @@ class BookAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsInstance(response.data, list)
         print("✅ Order books by publication year: PASSED")
+
+    def test_login_and_access(self):
+        """Test that a user can login and access protected endpoints."""
+        # Test using client.login for session-based authentication
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        print("✅ Login and access: PASSED")
