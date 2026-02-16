@@ -1,6 +1,5 @@
 from rest_framework import status, generics
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, get_user_model
@@ -26,11 +25,12 @@ class RegisterView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 # Login view
-class LoginView(APIView):
+class LoginView(generics.GenericAPIView):
     permission_classes = [AllowAny]
+    serializer_class = UserLoginSerializer
 
     def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = authenticate(
             username=serializer.validated_data['username'],
@@ -56,7 +56,7 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 # Follow a user
-class FollowUserView(APIView):
+class FollowUserView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, user_id):
@@ -71,14 +71,14 @@ class FollowUserView(APIView):
             )
 
         # Add to following
-        request.user.followers.add(user_to_follow)
+        request.user.following.add(user_to_follow)
         return Response(
             {'message': f'You are now following {user_to_follow.username}'},
             status=status.HTTP_200_OK
         )
 
 # Unfollow a user
-class UnfollowUserView(APIView):
+class UnfollowUserView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, user_id):
@@ -93,7 +93,7 @@ class UnfollowUserView(APIView):
             )
 
         # Remove from following
-        request.user.followers.remove(user_to_unfollow)
+        request.user.following.remove(user_to_unfollow)
         return Response(
             {'message': f'You have unfollowed {user_to_unfollow.username}'},
             status=status.HTTP_200_OK
